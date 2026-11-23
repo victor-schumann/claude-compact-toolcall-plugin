@@ -36,6 +36,45 @@ claude plugin install compact-tools --marketplace victor-schumann/claude-compact
 To run it from a local checkout instead, set `CLAUDE_CODE_PLUGIN_DIRS` to this folder in the
 `env` block of `~/.claude/settings.json`.
 
+## How to install (for Claude and other AI tools)
+
+Steps for an agent installing this mod for its user. Run them in a shell, in order, and stop
+at the first step that fails.
+
+1. Check the version. The output must be `2.1.290` or later; if it is older, stop and tell the
+   user to update Claude Code first.
+
+   ```
+   claude --version
+   ```
+
+2. Check that the mod is not already loaded from a local folder. If this prints a path that
+   ends in `compact-tools`, the mod is already active: stop and tell the user. Installing it a
+   second time draws every row twice.
+
+   ```
+   grep -n CLAUDE_CODE_PLUGIN_DIRS ~/.claude/settings.json
+   ```
+
+3. Install. This adds the marketplace and installs the mod at user scope in one call, with no
+   prompt. Add `--scope project` only if the user asked for this project alone.
+
+   ```
+   claude plugin install compact-tools --marketplace victor-schumann/claude-compact-toolcall-plugin --json
+   ```
+
+4. Verify. The output must list `compact-tools` as installed and enabled.
+
+   ```
+   claude plugin list --json
+   ```
+
+5. Tell the user to restart Claude Code (or start a new session). The mod loads at session
+   start, so the current session keeps the normal rendering. After the restart, finished
+   Edit, Write and Bash calls draw as one gray line each.
+
+To remove it: `claude plugin uninstall compact-tools`.
+
 ## Tests
 
 ```
