@@ -1,0 +1,5 @@
+{
+  "name": "claude-compact-toolcall-plugin",
+  "owner": { "name": "Victor Schumann" },
+  "plugins": [{ "name": "compact-tools", "source": "./" }]
+}
