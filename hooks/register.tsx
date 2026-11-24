@@ -3,7 +3,7 @@ import type { Register } from 'claude-code'
 type Hunk = { lines: string[] }
 
 // Tools whose finished call draws as one line: the row carries the result, the result block draws nothing.
-const MERGED = new Set(['Edit', 'Write', 'Bash'])
+const MERGED = new Set(['Edit', 'Write', 'Bash', 'Agent'])
 const COMMAND_MAX = 60
 const OUTPUT_MAX = 60
 // Matches the tool-row dot of the terminal theme in use (measured rgb 51,153,255).
@@ -44,6 +44,15 @@ const summarize = (tool: string, output: any): string | undefined => {
     const lines = text.split('\n')
     const first = cut(lines[0].trim(), OUTPUT_MAX)
     return lines.length > 1 ? `${first} (+${lines.length - 1})` : first
+  }
+  if (tool === 'Agent') {
+    if (output.status === 'async_launched') return 'backgrounded'
+    if (output.status === 'remote_launched') return 'remote'
+    if (output.status === 'completed') {
+      const secs = Math.round((output.totalDurationMs ?? 0) / 1000)
+      return `done, ${plural(output.totalToolUseCount ?? 0, 'tool')}, ${secs}s`
+    }
+    return undefined
   }
   if (tool === 'NotebookEdit') {
     if (output.error) return undefined
@@ -144,10 +153,13 @@ export const register: Register = on => {
     const summary = summarize(tool, output)
     if (summary === undefined) return next(e)
 
-    const args = (input ?? {}) as { command?: unknown; file_path?: unknown }
+    const args = (input ?? {}) as { command?: unknown; file_path?: unknown; description?: unknown; subagent_type?: unknown }
     let label: string
     let detail: string
-    if (tool === 'Bash' && typeof args.command === 'string') {
+    if (tool === 'Agent' && typeof args.description === 'string') {
+      label = typeof args.subagent_type === 'string' && args.subagent_type ? args.subagent_type : 'Agent'
+      detail = cut(args.description, COMMAND_MAX)
+    } else if (tool === 'Bash' && typeof args.command === 'string') {
       label = 'Bash'
       detail = oneLine(args.command)
     } else if (typeof args.file_path === 'string') {

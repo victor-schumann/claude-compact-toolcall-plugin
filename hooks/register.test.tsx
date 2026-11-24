@@ -115,3 +115,18 @@ for (const surface of ['terminal', 'desktop'] as const) {
     await b.unmount()
   })
 }
+
+for (const surface of ['terminal', 'desktop'] as const) {
+  test(`${surface}: backgrounded agent draws one line`, async ($, on) => {
+    on('session.messages', () => ({ value: [] }))
+    const input = { description: 'Add build-log check recipe', subagent_type: 'librarian', prompt: 'x' }
+    const output = { status: 'async_launched', agentId: 'a1', description: 'Add build-log check recipe', prompt: 'x', outputFile: '/tmp/o' }
+    expect(await rowText($, surface, 'Agent', input, output)).toContain('librarian(Add build-log check recipe) backgrounded')
+  })
+
+  test(`${surface}: finished agent shows tools and time`, async ($, on) => {
+    on('session.messages', () => ({ value: [] }))
+    const output = { status: 'completed', agentId: 'a1', content: [], totalToolUseCount: 5, totalDurationMs: 19337, totalTokens: 1, usage: {}, prompt: 'x' }
+    expect(await rowText($, surface, 'Agent', { description: 'Review diff', prompt: 'x' }, output)).toContain('Agent(Review diff) done, 5 tools, 19s')
+  })
+}
